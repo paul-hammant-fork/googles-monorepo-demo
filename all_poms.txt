@@ -1,0 +1,5 @@
+./guava/pom-template.xml
+./guava-gwt/pom-template.xml
+./guava-testlib/pom-template.xml
+./guava-tests/pom-template.xml
+./pom-template.xml
