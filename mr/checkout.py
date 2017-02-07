@@ -30,10 +30,13 @@ def writepom(pom_template):
 
 neededModules = {}
 depMap = {}
+
+# passed in args into dict
 for ix, arg in enumerate(sys.argv):
     if ix > 0:
         neededModules[arg] = True
-print 'Needed Modules:', str(neededModules)
+
+# crunch dot graph into Python dict
 with open("dependency-graph.dot") as dot:
     lines = dot.readlines()
     for line in lines:
@@ -45,13 +48,13 @@ with open("dependency-graph.dot") as dot:
             if lpart not in depMap:
                 depMap[lpart] = {}
                 depMap[lpart][rpart] = True
-    print "m:" + str(depMap)
+
+    # penultimate list of deps we need, tree into flat
     neededModules2 = {}
     for neededModule in neededModules:
         needThis(neededModule, depMap, neededModules2)
 
-    print "m2:" + str(neededModules2)
-
+    # we always need these
     sparse_checkout = "/mr/*\n/README.md\n/all_poms.txt\n/dependency-graph.dot\n/pom-template.xml\n"
 
     with open("all_poms.txt") as allpoms:
@@ -62,11 +65,12 @@ with open("dependency-graph.dot") as dot:
                 if "/"+neededModule+"/" in line:
                     sparse_checkout += line[1:]
                     sparse_checkout += line[1:].replace("pom-template.xml","src/*")
+                    # some weird Google-Guava non-maven-standard layout
                     sparse_checkout += line[1:].replace("pom-template.xml","benchmark/*")
                     sparse_checkout += line[1:].replace("pom-template.xml","test/*")
                     sparse_checkout += line[1:].replace("pom-template.xml","src-super/*")
 
-        print "sc:" + sparse_checkout
+        # Redo sparse-checkout file
         with open('.git/info/sparse-checkout', 'w') as sc:
             sc.write(sparse_checkout)
 
@@ -79,6 +83,7 @@ with open("dependency-graph.dot") as dot:
         # sparse re-checkout
         call(["git", "checkout", "--"])
 
+        # Write new pom files if approriate
         for root, dirs, files in os.walk("."):
             for currentFile in files:
                 fullpath = os.path.join(root, currentFile)
